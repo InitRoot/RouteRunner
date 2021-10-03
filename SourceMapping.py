@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-#pip install tabulate
+#pip install tabulate requests
 import argparse
 import requests
 import sys
@@ -37,7 +37,7 @@ class Interface():
 def sendGet(url, debug):
     try:
         if debug is True:
-            proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
+            proxies = {'http': 'http://192.168.88.49:8081', 'https': 'http://192.168.88.49:8081'}
             r = requests.get(url, proxies = proxies)
         else:
             r = requests.get(url)
@@ -50,7 +50,7 @@ def main():
     # Parse Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--dir', help='Root directory holding the source code', required=True)
-    parser.add_argument('-t', '--target', help='Target web application URL e.g. http://localhost:', required=True)
+    parser.add_argument('-t', '--target', help='Target web application URL e.g. http://localhost', required=True)
     parser.add_argument('-d', '--debug', help='Instruct our web requests to use our defined proxy', action='store_true', required=False)
     args = parser.parse_args()
 
@@ -80,8 +80,8 @@ def main():
    #output.info(potUrls)
     #Let's now check access
     accessible = [sendGet(url, args.debug) for url in potUrls]
-    output.success('Results of accessible urls to follow:')
-    println()
+    output.success('Results of accessible urls to follow:\n')
+  
     output.info(tabulate(accessible))
     # Try Harder
     output.success('Done!')
