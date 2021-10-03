@@ -6,5 +6,10 @@ Wrote as part of prep for OSWE.
 
 ```
  python .\SourceMapping.py -w 'c:\source\appname' -t 'https://localhost'
+```
 
+It will check for the following extensions which is configurable inside the source:
+
+```
+['*.txt', '*.json', '*.xml', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat']
 ```
