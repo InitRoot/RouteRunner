@@ -39,12 +39,12 @@ def sendGet(url, debug):
         if debug is True:
             proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
             r = requests.get(url, proxies = proxies)
+            output.info([r.url, r.status_code,len(r.content)])
         else:
             r = requests.get(url)
     except requests.exceptions.ProxyError:
         output.error('Is your proxy running?')
         sys.exit(-1)
-    output.info([r.url, r.status_code,len(r.content)])
     return [r.url, r.status_code,len(r.content)]
 
 def main():
