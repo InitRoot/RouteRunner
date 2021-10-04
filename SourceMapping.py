@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-#pip install tabulate requests
+#pip install tabulate
 import argparse
 import requests
 import sys
@@ -37,19 +37,20 @@ class Interface():
 def sendGet(url, debug):
     try:
         if debug is True:
-            proxies = {'http': 'http://192.168.88.49:8081', 'https': 'http://192.168.88.49:8081'}
+            proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
             r = requests.get(url, proxies = proxies)
         else:
             r = requests.get(url)
     except requests.exceptions.ProxyError:
         output.error('Is your proxy running?')
         sys.exit(-1)
-    return [r.url, r.status_code]
+    output.info([r.url, r.status_code,len(r.content)])
+    return [r.url, r.status_code,len(r.content)]
 
 def main():
     # Parse Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--dir', help='Root directory holding the source code', required=True)
+    parser.add_argument('-w', '--dir',	 help='Root directory holding the source code', required=True)
     parser.add_argument('-t', '--target', help='Target web application URL e.g. http://localhost', required=True)
     parser.add_argument('-d', '--debug', help='Instruct our web requests to use our defined proxy', action='store_true', required=False)
     args = parser.parse_args()
@@ -70,7 +71,7 @@ def main():
                 output.info(f"{k}: {v}")
 
     #Let's get a list of all files in the dir
-    exts = ['*.txt', '*.json', '*.xml', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat']
+    exts = ['*.txt', '*.json', '*.xml', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat', '*.ascx', '*.html']
     files = [f for ext in exts 
          for f in glob.glob(args.dir + '/**/' + ext, recursive=True)]
     output.success('We got the list of files!')
