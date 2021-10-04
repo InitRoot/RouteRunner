@@ -53,6 +53,7 @@ def main():
     parser.add_argument('-w', '--dir',	 help='Root directory holding the source code', required=True)
     parser.add_argument('-t', '--target', help='Target web application URL e.g. http://localhost', required=True)
     parser.add_argument('-d', '--debug', help='Instruct our web requests to use our defined proxy', action='store_true', required=False)
+    parser.add_argument('--wordlist', help='Only creates the wordlist based on source files',action='store_true')
     args = parser.parse_args()
 
     # Instantiate our interface class
@@ -80,12 +81,15 @@ def main():
     potUrls = [url.replace('\\','/') for url in potUrls]
    #output.info(potUrls)
     #Let's now check access
-    accessible = [sendGet(url, args.debug) for url in potUrls]
-    output.success('Results of accessible urls to follow:\n')
-  
-    output.info(tabulate(accessible))
-    # Try Harder
-    output.success('Done!')
+    if args.wordlist:
+        output.info((potUrls))
+        output.success('Done!')
+    else:
+        accessible = [sendGet(url, args.debug) for url in potUrls]
+        output.success('Results of accessible urls to follow:\n')
+        output.info(potUrls)
+        output.success('Done!')
+
     
 if __name__ == '__main__':
     main()
