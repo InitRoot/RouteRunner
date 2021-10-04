@@ -82,12 +82,12 @@ def main():
    #output.info(potUrls)
     #Let's now check access
     if args.wordlist:
-        output.info((potUrls))
+        print(*potUrls, sep="\n")
         output.success('Done!')
     else:
         accessible = [sendGet(url, args.debug) for url in potUrls]
         output.success('Results of accessible urls to follow:\n')
-        output.info(potUrls)
+        output.info(tabulate(accessible))
         output.success('Done!')
 
     
