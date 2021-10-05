@@ -6,7 +6,9 @@ import requests
 import sys
 import glob
 from tabulate import tabulate
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Interface class to display terminal messages
 class Interface():
@@ -38,10 +40,10 @@ def sendGet(url, debug):
     try:
         if debug is True:
             proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
-            r = requests.get(url, proxies = proxies)
+            r = requests.get(url, proxies = proxies,verify=False)
             output.info([r.url, r.status_code,len(r.content)])
         else:
-            r = requests.get(url)
+            r = requests.get(url,verify=False)
     except requests.exceptions.ProxyError:
         output.error('Is your proxy running?')
         sys.exit(-1)
