@@ -16,3 +16,6 @@ It will check for the following extensions which is configurable inside the sour
 ['*.txt', '*.json', '*.xml', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat']
 ```
 
+In the below example, a craft.zip obtained from a backup file can be mapped back to the application using the tool.
+
+![image](https://user-images.githubusercontent.com/954507/136034951-6a38ad7d-0626-4e75-9f52-1d14f16f4d2b.png)
