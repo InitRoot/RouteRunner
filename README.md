@@ -1,7 +1,7 @@
 # SourceMapping
 Checks if files is accessible based on the source code. 
 Useful when obtaining source code from a target and you want to check of any files is accesible without auth.
-Wrote as part of prep for OSWE.
+Wrote as part of prep for OSWE. 
 
 
 ```
@@ -16,6 +16,9 @@ It will check for the following extensions which is configurable inside the sour
 ['*.txt', '*.json', '*.xml', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat']
 ```
 
-In the below example, a craft.zip obtained from a backup file can be mapped back to the application using the tool.
+In the below example, we could either have found a backup file on blackbox engagement, or we are doing an whitebox engagement with the source.
+We've used the ATutor example from the OSWE coursework. The script will automatically check which pages is accessible based on response, then check for potential form inputs on the pages that is accessible. This will allow us to target pages instead of sifting through large volumes.
 
-![image](https://user-images.githubusercontent.com/954507/136034951-6a38ad7d-0626-4e75-9f52-1d14f16f4d2b.png)
+![image](https://user-images.githubusercontent.com/954507/136694737-74a18c1f-5e43-4c24-b78e-289be2a52b26.png)
+![image](https://user-images.githubusercontent.com/954507/136694756-87b7bbeb-983b-4c8e-97d5-48a1cae1c9e1.png)
+
