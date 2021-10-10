@@ -41,16 +41,28 @@ def sendGet(url, debug):
         if debug is True:
             proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
             r = requests.get(url, proxies = proxies,verify=False)
-            output.info([r.url, r.status_code,len(r.content)])
+            pot = analyseVuln(r)
+            output.info([r.url, r.status_code,len(r.content),pot])
         else:
             r = requests.get(url,verify=False)
+            pot = analyseVuln(r)
     except requests.exceptions.ProxyError:
         output.error('Is your proxy running?')
         sys.exit(-1)
-    return [r.url, r.status_code,len(r.content)]
+    return [r.url, r.status_code,len(r.content),pot]
+
+
+def analyseVuln(rqResponse):
+    if "<form action" in str(rqResponse.content):
+        return "InputForm"
+    else:
+        return ""
+
+def remDuplicates(x):
+  return list(dict.fromkeys(x))
 
 def main():
-    # Parse Arguments
+    # Parse Argumentsxs
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--dir',	 help='Root directory holding the source code', required=True)
     parser.add_argument('-t', '--target', help='Target web application URL e.g. http://localhost', required=True)
@@ -88,6 +100,7 @@ def main():
         output.success('Done!')
     else:
         accessible = [sendGet(url, args.debug) for url in potUrls]
+        accessible = list(map(list,set(map(tuple,accessible))))
         output.success('Results of accessible urls to follow:\n')
         output.info(tabulate(accessible))
         output.success('Done!')
