@@ -55,6 +55,8 @@ def sendGet(url, debug):
 def analyseVuln(rqResponse):
     if "<form action" in str(rqResponse.content):
         return "InputForm"
+    else if "<form name" in str(rqResponse.content):
+        return "InputForm"
     else:
         return ""
 
