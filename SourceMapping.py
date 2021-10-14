@@ -55,10 +55,11 @@ def sendGet(url, debug):
 def analyseVuln(rqResponse):
     if "<form action" in str(rqResponse.content):
         return "InputForm"
-    else if "<form name" in str(rqResponse.content):
+    elif "<form name" in str(rqResponse.content):
         return "InputForm"
     else:
         return ""
+
 
 def remDuplicates(x):
   return list(dict.fromkeys(x))
@@ -88,7 +89,7 @@ def main():
                 output.info(f"{k}: {v}")
 
     #Let's get a list of all files in the dir
-    exts = ['*.txt', '*.json', '*.xml', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat', '*.ascx', '*.html']
+    exts = ['*.txt', '*.json', '*.xml', '*.asp', '*.asmx', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat', '*.ascx', '*.html']
     files = [f for ext in exts 
          for f in glob.glob(args.dir + '/**/' + ext, recursive=True)]
     output.success('We got the list of files!')
@@ -102,7 +103,7 @@ def main():
         output.success('Done!')
     else:
         accessible = [sendGet(url, args.debug) for url in potUrls]
-        accessible = list(map(list,set(map(tuple,accessible))))
+        #accessible = list(map(list,set(map(tuple,accessible))))
         output.success('Results of accessible urls to follow:\n')
         output.info(tabulate(accessible))
         output.success('Done!')
