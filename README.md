@@ -1,5 +1,5 @@
 # SourceMapping
-Creates a potential list of URLS for a target based on the source code provided. This is a direct comparison based on the directory structures.
+Creates, validates and analyse potential list of URLS for a target based on the source code provided. This is a direct comparison based on the directory structures.
 Does not take into account routing or advance MVC type applications.
 
 Useful when obtaining source code from a target and you want to check of any files is accesible without auth, or during code reviews to identify potential pages which can be reviewed first. Wrote as part of prep for OSWE.
