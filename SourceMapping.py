@@ -1,13 +1,17 @@
 #!/usr/bin/python3
 
-#pip install tabulate
+#python3 -m pip install requests, tabulate
 import argparse
 import requests
 import sys
 import glob
+import concurrent
+import concurrent.futures
+from tqdm import tqdm
+from itertools import repeat
+import csv
 from tabulate import tabulate
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Interface class to display terminal messages
@@ -21,7 +25,8 @@ class Interface():
         self.end = '\033[0m'
 
     def header(self):
-        print('\n    >> Source code to urls')
+        print(f"\n {self.bold}*************** Source Code Mapping ***************{self.end}")
+        print(f"@initroot \n")
 
     def info(self, message):
         print(f"[{self.white}*{self.end}] {message}")
@@ -37,6 +42,7 @@ class Interface():
 
 
 def sendGet(url, debug):
+    #debug = False;
     try:
         if debug is True:
             proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
@@ -46,9 +52,12 @@ def sendGet(url, debug):
         else:
             r = requests.get(url,verify=False)
             pot = analyseVuln(r)
-    except requests.exceptions.ProxyError:
-        output.error('Is your proxy running?')
-        sys.exit(-1)
+    except requests.exceptions.ProxyError:                 
+        r = requests.get(url,verify=False)
+        pot = analyseVuln(r)
+        output.info([r.url, r.status_code,len(r.content),pot])
+        return [r.url, r.status_code,len(r.content),pot]
+
     return [r.url, r.status_code,len(r.content),pot]
 
 
@@ -57,6 +66,8 @@ def analyseVuln(rqResponse):
         return "InputForm"
     elif "<form name" in str(rqResponse.content):
         return "InputForm"
+    elif 'type="submit"' in str(rqResponse.content):
+        return "SubmitForm"
     else:
         return ""
 
@@ -71,6 +82,7 @@ def main():
     parser.add_argument('-t', '--target', help='Target web application URL e.g. http://localhost', required=True)
     parser.add_argument('-d', '--debug', help='Instruct our web requests to use our defined proxy', action='store_true', required=False)
     parser.add_argument('--wordlist', help='Only creates the wordlist based on source files',action='store_true')
+    parser.add_argument('-o', '--output', help='Write results to output file', required=False)
     args = parser.parse_args()
 
     # Instantiate our interface class
@@ -89,25 +101,30 @@ def main():
                 output.info(f"{k}: {v}")
 
     #Let's get a list of all files in the dir
-    exts = ['*.txt', '*.json', '*.xml', '*.asp', '*.asmx', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat', '*.ascx', '*.html']
+    exts = ['*.txt', '*.json', '*.xml', '*.config', '*.svc','*.asmx', '*.sql', '*.conf', '*.zip', '*.php', '*.ini', '*.cs', '*.js', '*.aspx', '*.asp', '*.java', '*.dll', '*.dat', '*.ascx', '*.html']
     files = [f for ext in exts 
          for f in glob.glob(args.dir + '/**/' + ext, recursive=True)]
-    output.success('We got the list of files!')
+    output.info('List of files generated with success!')
     #Lets convert it to our target
     potUrls = [file.replace(args.dir,args.target) for file in files]
     potUrls = [url.replace('\\','/') for url in potUrls]
-   #output.info(potUrls)
+       
     #Let's now check access
     if args.wordlist:
         print(*potUrls, sep="\n")
         output.success('Done!')
     else:
-        accessible = [sendGet(url, args.debug) for url in potUrls]
-        #accessible = list(map(list,set(map(tuple,accessible))))
-        output.success('Results of accessible urls to follow:\n')
-        output.info(tabulate(accessible))
-        output.success('Done!')
-
+        output.info('Now checking each file against ' + str(len(potUrls)) + ' targets, please wait:\n')
+        with concurrent.futures.ThreadPoolExecutor(10) as executor:
+            #accessible = executor.map(sendGet, potUrls, repeat(args.debug))
+            accessible = list(tqdm(executor.map(sendGet, potUrls, repeat(args.debug)), total=len(potUrls)))        
+            output.info(tabulate(accessible))
+            if args.output:
+                output_file = args.output             
+                with open(output_file, 'w') as file:
+                    write = csv.writer(file) 
+                    write.writerows(accessible)
+        output.success('Done!') 
     
 if __name__ == '__main__':
     main()
