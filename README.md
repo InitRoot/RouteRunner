@@ -4,7 +4,7 @@ Does not take into account routing or advance MVC type applications.
 
 Useful when obtaining source code from a target and you want to check of any files is accesible without auth, or during code reviews to identify potential pages which can be reviewed first. Wrote as part of prep for OSWE.
 ## DEV BRANCH
-Development branch has some updates, including better outputs and the start of including frameworks, currently MVC is supported very basic. Some improvements is on the list for it.
+Development branch has some updates, including better outputs and the start of including frameworks, currently .net MVC is supported very basic. Some improvements is on the list for it.
 
 ### Usage
 
