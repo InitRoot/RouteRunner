@@ -84,17 +84,27 @@ def analyseVuln(rqResponse):
 #extracts possible routes from source code .cs files --> controllers --> actions
 #setuyp extract from the global as well
 #improve action result regexes for multiples
-def findnetMVCRoutes(path,debug):
-    controllerpattern = re.compile(r"\b(public|private|)\s*s*(class)\s(?P<ControllerName>[A-Za-z_][A-Za-z_0-9]*)*\s*[:]\s\b(BaseController|ApiController|Controller)")
+def findnetMVCRoutes(path,debug,paramsreq):
+    controllerpattern = re.compile(r"\b(public|private|internal|protected)\s*s*(class)\s(?P<ControllerName>[A-Za-z_][A-Za-z_0-9]*)*\s*[:]\s\b(BaseController|ApiController|Controller)")
     actionpattern1 = re.compile(r"\b(ActionResult|IActionResult).\s*\b(?P<ActionNames>[A-Za-z_][A-Za-z_0-9]*)")
+    functionnames = re.compile(r"\b(public|private|internal|protected)(\s+(static|async))?\s+[\w]+(?:<[\w\s,<>]+>)?\s+(?P<FunctionNames>[A-Za-z_][A-Za-z_0-9]*)\s*\(")
+    nullablefunctionnames = re.compile(r"\b(public|private|internal|protected)(\s+(static|async))?\s+[\w<>,\s]+\??\s+(?P<FunctionNames>[A-Za-z_][A-Za-z_0-9]*)\s*\(")
+    codedroutes = re.compile(r'\[Route\("(?P<routes>[^"]+)"\)\]')
+    codedroutesprefix = re.compile(r'\.*RoutePrefix\("(?P<routes>[^"]+)"\)\]')
     #method names (?<type>[^\s]+)\s(?<name>[^\s]+)(?=\s\{get;)
     curRoutes = []
+    paramRoutes = []
     with open (path, encoding='utf8') as infile:
         curController = None
         for num, line in enumerate(infile, 1):
             #print(str(num) + ":" + line)
             #Controller check first
-            if ('BaseController' in line or 'APIController' in line or 'Controller' in line):
+            if ('RoutePrefix' in line):
+                results =   codedroutesprefix.findall(line)[0]
+                #print(results)
+                #print(results[-1]) 
+                curController = results    
+            elif ('BaseController' in line or 'APIController' in line or 'Controller' in line)and isBlank(curController):
                 try:
                     mvcpath = ''
                     #print(str(num) + ":" + line)
@@ -105,30 +115,144 @@ def findnetMVCRoutes(path,debug):
                     mvcpath = mvcpath.replace('Controller','')
                     #print(mvcpath)     #ddebug
                     if isNotBlank(mvcpath):
-                        curController = mvcpath
+                        #print(line)     #ddebug
+                        if ('ApiController' in line):
+                            curController = "api/" + mvcpath
+                        else:
+                            curController = mvcpath
+                        
+                    #print(curController)
                                                   
                 #except Exception as e: print(e)
                 except: None
                 #output.error("Regex controller error on following:")
                 #output.info(path  + "-->"  + line + " \t \n")
                             
-                #Check if includes actionresult for actions    
-            elif ('ActionResult' in line) and isNotBlank(curController):
+                #Check if includes actionresult for actions  
+                #print(line)  
+            elif ('[Route' in line) and isNotBlank(curController):
                 try:
                     mvcpath = ''
+                    params = ''
+                    #print(line)
+                    #attempts to extract data based on several possible regexes.
+                    results = codedroutes.findall(line)[0]  
+                    mvcpath = results[-1]
+                    params = extractParameters(line)
+                    if isNotBlank(params):
+                        params = " | (" + params + ")"
+                    if isNotBlank(mvcpath):
+                                mvcpath = "/" + mvcpath
+                                mvcpath = mvcpath.strip() 
+                                curRoutes.append(mvcpath)
+                                paramRoutes.append(mvcpath + params)
+                except:
+                    None 
+            elif ('ActionResult' in line) and isNotBlank(curController):
+                #print(line)
+                try:
+                    mvcpath = ''
+                    params = ''
                     #attempts to extract data based on several possible regexes.
                     results = actionpattern1.findall(line)[0]  
                     mvcpath = results[1]
+                    #print(mvcpath)
+                    params = extractParameters(line)
+                    if isNotBlank(params):
+                        params = params
+                    if isNotBlank(mvcpath):
+                                mvcpath = "/" + curController + "/" + mvcpath
+                                #print(mvcpath)
+                                mvcpath = mvcpath.strip() 
+                                curRoutes.append(mvcpath)
+                                paramRoutes.append(mvcpath + params)
+                except Exception as e: print(e)
+               
+
+                #Check if includes access modifiers for functions and then does a function parse               
+            elif ('public' in line or 'private' in line or 'static' in line or 'internal' in line or 'protected' in line) and isNotBlank(curController):
+                #print(line)
+                try:
+                    mvcpath = ''
+                    params = ''
+                    #attempts to extract data based on several possible regexes.
+                    results = functionnames.findall(line)[0]
+                    #print(results)  
+                    mvcpath = results[-1]
+                    params = extractParameters(line)
+                    if isNotBlank(params):
+                        params = params
                     if isNotBlank(mvcpath):
                                 mvcpath = "/" + curController + "/" + mvcpath 
                                 curRoutes.append(mvcpath)
+                                paramRoutes.append(mvcpath + params)
                 except:
                     None                                                      
+            elif ('public' in line or 'private' in line or 'static' in line or 'internal' in line or 'protected' in line) and isNotBlank(curController):
+                #print(line)
+                try:
+                    mvcpath = ''
+                    params = ''
+                    #attempts to extract data based on several possible regexes.
+                    results = nullablefunctionnames.findall(line)[0]
+                    #print(results)  
+                    mvcpath = results[-1]
+                    params = extractParameters(line)
+                    if isNotBlank(params):
+                        params = params
+                    if isNotBlank(mvcpath):
+                                mvcpath = "/" + curController + "/" + mvcpath 
+                                curRoutes.append(mvcpath)
+                                paramRoutes.append(mvcpath + params)
+                except:
+                    None             
             
             else:
                 continue
  #print("Pre return none finished func")
-    return curRoutes
+    if paramsreq:
+        #output.info('Output including parameters selected.')
+
+        return paramRoutes
+    else:
+        return curRoutes
+
+def extractParameters(line):
+    #print("Extracting paramters from: " + line)
+    findParams = re.compile(r'\(\s*(?P<parameters>(?:\[\w+(?:\(\))?\]\s*)*[\w<>,\s]+\s+\w+(?:\s*,\s*(?:\[\w+(?:\(\))?\]\s*)*[\w<>,\s]+\s+\w+)*)\s*\)')
+    param_pattern = re.compile(r'(\w+)\s+(\w+)')
+    foundparams = ''
+    urlParams = ''
+    fullurlParams = []
+    try:
+        foundparams = findParams.findall(line)[0]
+        #print(foundparams) 
+        matches = param_pattern.findall(foundparams)
+        for match in matches:
+            # Each match is a tuple (type, name)
+            if ('tring' in match[0]):
+                urlParams = match[1] + "=" + match[1]
+            elif ('int' in match[0]):
+                urlParams = match[1] + "=123456"
+            elif ('oolean' in match[0]):
+                urlParams = match[1] + "=true"
+            elif ('ime' in match[0]):
+                urlParams = match[1] + "=22/07/2021"
+            else:
+                urlParams = match[1] + "=" + match[1]
+                print("Can't parse: " + match[0] + "..." +match[1])
+            
+            fullurlParams.append(urlParams)
+            
+
+
+        
+        return "?" + "&".join(fullurlParams)
+
+    except IndexError:
+        return ''  # Return an empty string if no matches are found
+
+
 
 def isBlank (myString):
     return not (myString and myString.strip())
@@ -164,8 +288,9 @@ def main():
     parser.add_argument('-t', '--target', help='Target web application URL e.g. http://localhost', required=True)
     parser.add_argument('-d', '--debug', help='Instruct our web requests to use our defined proxy', action='store_true', required=False)
     parser.add_argument('--wordlist', help='Only creates the wordlist based on source files',action='store_true')
-    parser.add_argument('-f', '--framework', help='Routing framework e.g. netmvc, zend', required=False)
+    parser.add_argument('-f', '--framework', help='Routing framework e.g. netmvc, zend, spring, nodejs', required=False)
     parser.add_argument('-o', '--output', help='Write results to output file', required=False)
+    parser.add_argument('--parameters', help='Output parameters found',action='store_true')
     args = parser.parse_args()
 
     # Instantiate our interface class
@@ -191,20 +316,15 @@ def main():
     potUrls = [] #general holder for all our URLS
     #Lets check if a framework is being forced
     framewk = args.framework
+    params = args.parameters
+    #print(params)
     #MVC
     if 'netmvc' in framewk:
         output.info('Framework selected, analysing as .net MVC application.')
         extm = re.compile(".*\.cs$")
-        csfiles = list(filter(extm.match, files))
-        #print(*csfiles, sep="\n")  #ddebug
-        #mvcpaths = []
-        #for file in csfiles:
-        #    mvcpaths = findMVCRoutes(file, args.debug)
-        #    mvcpaths = remDuplicates(mvcpaths) 
-            #print(mvcpaths)
-            
+        csfiles = list(filter(extm.match, files))           
         with concurrent.futures.ThreadPoolExecutor(5) as executor:
-            mvcPaths = list(tqdm(executor.map(findnetMVCRoutes, csfiles, repeat(args.debug)), total=len(csfiles)))
+            mvcPaths = list(tqdm(executor.map(findnetMVCRoutes, csfiles, repeat(args.debug), repeat(params)), total=len(csfiles)))
             mvcPaths = [t for t in mvcPaths if t] #strips all empty tuples
             mvcPaths = flatten(mvcPaths)
             mvcPaths = remDuplicates(mvcPaths) 
