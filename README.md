@@ -13,6 +13,7 @@ Development branch has some updates, including better outputs and the start of i
  -d for debug mode which will attempt to use a proxy as well
  --wordlist to print only a wordlist of the files
  -o for output location in csv format
+--parameters will output the parameters and has some basic functionality to support them.
 ```
 ### Configurable options in code
 
@@ -41,7 +42,8 @@ def analyseVuln(rqResponse):
 - Output write to file in CSV format
 - Threading
 - Debug mode, will have verbose output on each request and use proxy if one is found
-- MVC Framework support
+- MVC Framework support, with much better support. Currently only .net MVC is supported
+- Parameter extracter
 
 ### Screenshots:
 In the below example, we could either have found a backup file on blackbox engagement, or we are doing an whitebox engagement with the source.
